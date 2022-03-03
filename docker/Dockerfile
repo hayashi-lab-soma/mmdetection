@@ -1,7 +1,12 @@
+# Define function directory (Lambda RIE)
+ARG FUNCTION_DIR="/function"
+
+# Define argments for mmdetection
 ARG PYTORCH="1.6.0"
 ARG CUDA="10.1"
 ARG CUDNN="7"
 
+# Base image (mmdetection)
 FROM pytorch/pytorch:${PYTORCH}-cuda${CUDA}-cudnn${CUDNN}-devel
 
 ENV TORCH_CUDA_ARCH_LIST="6.0 6.1 7.0+PTX"
@@ -18,8 +23,47 @@ RUN pip install --no-cache-dir mmcv-full==1.3.17 -f https://download.openmmlab.c
 
 # Install MMDetection
 RUN conda clean --all
-RUN git clone https://github.com/open-mmlab/mmdetection.git /mmdetection
+# RUN git clone https://github.com/open-mmlab/mmdetection.git /mmdetection
+# Clone mmdetection repo in hayashi-lab-soma remote repo
+RUN git clone https://github.com/hayashi-lab-soma/mmdetection.git /mmdetection
 WORKDIR /mmdetection
 ENV FORCE_CUDA="1"
 RUN pip install --no-cache-dir -r requirements/build.txt
 RUN pip install --no-cache-dir -e .
+
+
+# AWS Lambda Runtime Interface Client
+# Install depends packages
+RUN apt-get install -y \
+  g++ \
+  make \
+  cmake \
+  unzip \
+  wget \
+  libcurl \
+  libcurl4-openssl-dev
+  libsm6 \
+  libxrender1 \
+  libxtst6 
+
+RUN pip install --upgrade pip && \
+    pip install awslambdaric boto3
+
+# Download sample checkpoint files
+RUN wget https://download.openmmlab.com/mmdetection/v2.0/htc/htc_r50_fpn_1x_coco/htc_r50_fpn_1x_coco_20200317-7332cf16.pth -P /mmdetection/checkpoints
+RUN wget https://download.openmmlab.com/mmdetection/v2.0/mask_rcnn/mask_rcnn_r50_fpn_1x_coco/mask_rcnn_r50_fpn_1x_coco_20200205-d4b0c5d6.pth -P /mmdetection/checkpoints
+
+# COPY entry script and rie execute 
+COPY ./entry_script.sh /entry_script.sh
+ADD aws-lambda-rie-arm64 /usr/local/bin/aws-lambda-rie 
+ENTRYPOINT [ "/entry_script.sh" ]
+
+# Create function directory
+RUN mkdir -p ${FUNCTION_DIR}
+
+# Copy function code
+# "app.py" in local app directory -> ${FUNCTION_DIR}/app.py
+COPY app/app.py ${FUNCTION_DIR}/app.py
+
+# Set entry point (python module) for Lambda trigger
+CMD ["app.hander"]
