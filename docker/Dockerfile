@@ -54,9 +54,9 @@ RUN wget https://download.openmmlab.com/mmdetection/v2.0/mask_rcnn/mask_rcnn_r50
 
 # Prepare to download original checkpoint files
 RUN chmod +x /mmdetection/gdrive_download.sh
+RUN chmod +x /mmdetection/download_pth.sh
 RUN ["/bin/bash", "-c", "source /mmdetection/gdrive_download.sh"]
 RUN ["/bin/bash", "-c", "source /mmdetection/download_pth.sh"]
-
 
 # COPY entry script and rie execute 
 RUN cp /mmdetection/docker/entry_script.sh /entry_script.sh
