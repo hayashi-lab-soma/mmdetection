@@ -13,9 +13,8 @@ ENV TORCH_CUDA_ARCH_LIST="6.0 6.1 7.0+PTX"
 ENV TORCH_NVCC_FLAGS="-Xfatbin -compress-all"
 ENV CMAKE_PREFIX_PATH="$(dirname $(which conda))/../"
 
-RUN apt-get update && apt-get install -y ffmpeg libsm6 libxext6 git ninja-build libglib2.0-0 libsm6 libxrender-dev libxext6 \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && \
+    apt-get install -y ffmpeg libsm6 libxext6 git ninja-build libglib2.0-0 libsm6 libxrender-dev libxext6
 
 # Install MMCV
 RUN pip install --no-cache-dir --upgrade pip wheel setuptools
@@ -25,7 +24,7 @@ RUN pip install --no-cache-dir mmcv-full==1.3.17 -f https://download.openmmlab.c
 RUN conda clean --all
 # RUN git clone https://github.com/open-mmlab/mmdetection.git /mmdetection
 # Clone mmdetection repo in hayashi-lab-soma remote repo
-RUN git clone https://github.com/hayashi-lab-soma/mmdetection.git /mmdetection
+RUN git clone -b bcc-app https://github.com/hayashi-lab-soma/mmdetection.git /mmdetection
 WORKDIR /mmdetection
 ENV FORCE_CUDA="1"
 RUN pip install --no-cache-dir -r requirements/build.txt
@@ -34,17 +33,19 @@ RUN pip install --no-cache-dir -e .
 
 # AWS Lambda Runtime Interface Client
 # Install depends packages
-RUN apt-get install -y \
+RUN apt-get update && apt-get install -y \
   g++ \
   make \
   cmake \
   unzip \
   wget \
-  libcurl \
-  libcurl4-openssl-dev
+  libcurl4-openssl-dev \
   libsm6 \
   libxrender1 \
   libxtst6 
+
+RUN apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 RUN pip install --upgrade pip && \
     pip install awslambdaric boto3
@@ -57,7 +58,7 @@ RUN wget https://download.openmmlab.com/mmdetection/v2.0/mask_rcnn/mask_rcnn_r50
 RUN source /mmdetection/gdrive_download.sh
 
 # COPY entry script and rie execute 
-ADD /mmdetection/docker/aws-lambda-rie-arm64 /usr/local/bin/aws-lambda-rie 
+RUN cp /mmdetection/docker/aws-lambda-rie-arm64 /usr/local/bin/aws-lambda-rie 
 ENTRYPOINT [ "/entry_script.sh" ]
 
 # Create function directory
