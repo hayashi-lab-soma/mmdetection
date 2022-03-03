@@ -1,3 +1,4 @@
+import time
 from argparse import ArgumentParser
 from mmdet.apis import (async_inference_detector, inference_detector,
                         init_detector, show_result_pyplot)
@@ -28,4 +29,8 @@ if __name__ == '__main__':
   args = parse_args()
 
   # build the model from a config file and a checkpoint file
+  start = time.perf_counter()
   model = init_detector(args.config, args.checkpoint, device=args.device)
+  print('Init model: {} sec'.format(time.perf_counter() - start))
+
+  
