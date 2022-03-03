@@ -31,7 +31,6 @@ ENV FORCE_CUDA="1"
 RUN pip install --no-cache-dir -r requirements/build.txt
 RUN pip install --no-cache-dir -e .
 
-
 # AWS Lambda Runtime Interface Client
 # Install depends packages
 RUN apt-get update && apt-get install -y \
@@ -52,18 +51,20 @@ RUN apt-get clean \
 RUN wget https://download.openmmlab.com/mmdetection/v2.0/htc/htc_r50_fpn_1x_coco/htc_r50_fpn_1x_coco_20200317-7332cf16.pth -P /mmdetection/checkpoints
 RUN wget https://download.openmmlab.com/mmdetection/v2.0/mask_rcnn/mask_rcnn_r50_fpn_1x_coco/mask_rcnn_r50_fpn_1x_coco_20200205-d4b0c5d6.pth -P /mmdetection/checkpoints
 
+COPY demo/image_demo_htc.py /mmdetection/demo
+COPY configs/tacobc_htc.py /mmdetection/configs
 
 # Prepare to download original checkpoint files
+COPY download_pth.sh /mmdetection/download_pth.sh
+COPY gdrive_download.sh /mmdetection/gdrive_download.sh
 RUN chmod +x /mmdetection/gdrive_download.sh
 RUN chmod +x /mmdetection/download_pth.sh
-RUN ["/bin/bash", "-c", "source /mmdetection/gdrive_download.sh"]
-RUN ["/bin/bash", "-c", "source /mmdetection/download_pth.sh"]
+RUN ["/bin/bash", "-c", "source /mmdetection/gdrive_download.sh; source /mmdetection/download_pth.sh"]
 
 # COPY entry script and rie execute 
 RUN cp /mmdetection/docker/entry_script.sh /entry_script.sh
 RUN cp /mmdetection/docker/aws-lambda-rie-arm64 /usr/local/bin/aws-lambda-rie 
 ENTRYPOINT [ "/entry_script.sh" ]
-
 
 # Create function directory
 ARG FUNCTION_DIR
