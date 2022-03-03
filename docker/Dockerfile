@@ -53,6 +53,15 @@ RUN pip install --upgrade pip && \
 RUN wget https://download.openmmlab.com/mmdetection/v2.0/htc/htc_r50_fpn_1x_coco/htc_r50_fpn_1x_coco_20200317-7332cf16.pth -P /mmdetection/checkpoints
 RUN wget https://download.openmmlab.com/mmdetection/v2.0/mask_rcnn/mask_rcnn_r50_fpn_1x_coco/mask_rcnn_r50_fpn_1x_coco_20200205-d4b0c5d6.pth -P /mmdetection/checkpoints
 
+
+# Prepare to download original checkpoint files
+WORKDIR /tmp
+RUN wget https://gist.githubusercontent.com/kumeS/6f67b4b9085b3d2580c51b8ae4953beb/raw/4587c1306e00a576037379ee410d6c35f3daada6/gdrive_download.sh
+
+
+
+
+
 # COPY entry script and rie execute 
 COPY ./entry_script.sh /entry_script.sh
 ADD aws-lambda-rie-arm64 /usr/local/bin/aws-lambda-rie 
