@@ -24,6 +24,7 @@ RUN pip install --no-cache-dir mmcv-full==1.3.17 -f https://download.openmmlab.c
 RUN conda clean --all
 # RUN git clone https://github.com/open-mmlab/mmdetection.git /mmdetection
 # Clone mmdetection repo in hayashi-lab-soma remote repo
+
 RUN git clone -b bcc-app https://github.com/hayashi-lab-soma/mmdetection.git /mmdetection
 WORKDIR /mmdetection
 ENV FORCE_CUDA="1"
