@@ -56,10 +56,8 @@ RUN wget https://download.openmmlab.com/mmdetection/v2.0/mask_rcnn/mask_rcnn_r50
 
 # Prepare to download original checkpoint files
 RUN source /mmdetection/gdrive_download.sh
-RUN 
 
 # COPY entry script and rie execute 
-COPY ./entry_script.sh /entry_script.sh
 ADD aws-lambda-rie-arm64 /usr/local/bin/aws-lambda-rie 
 ENTRYPOINT [ "/entry_script.sh" ]
 
