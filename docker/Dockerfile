@@ -47,26 +47,35 @@ RUN apt-get update && apt-get install -y \
 RUN apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip install --upgrade pip && \
-    pip install awslambdaric boto3
-
 # Download sample checkpoint files
 RUN wget https://download.openmmlab.com/mmdetection/v2.0/htc/htc_r50_fpn_1x_coco/htc_r50_fpn_1x_coco_20200317-7332cf16.pth -P /mmdetection/checkpoints
 RUN wget https://download.openmmlab.com/mmdetection/v2.0/mask_rcnn/mask_rcnn_r50_fpn_1x_coco/mask_rcnn_r50_fpn_1x_coco_20200205-d4b0c5d6.pth -P /mmdetection/checkpoints
 
+
 # Prepare to download original checkpoint files
-RUN source /mmdetection/gdrive_download.sh
+RUN chmod +x /mmdetection/gdrive_download.sh
+RUN ["/bin/bash", "-c", "source /mmdetection/gdrive_download.sh"]
+RUN ["/bin/bash", "-c", "source /mmdetection/download_pth.sh"]
+
 
 # COPY entry script and rie execute 
+RUN cp /mmdetection/docker/entry_script.sh /entry_script.sh
 RUN cp /mmdetection/docker/aws-lambda-rie-arm64 /usr/local/bin/aws-lambda-rie 
 ENTRYPOINT [ "/entry_script.sh" ]
 
+
 # Create function directory
+ARG FUNCTION_DIR
 RUN mkdir -p ${FUNCTION_DIR}
+
+RUN pip install --upgrade pip && \
+    pip install --target ${FUNCTION_DIR} awslambdaric
+RUN pip install --upgrade pip && pip install boto3
 
 # Copy function code
 # "app.py" in local app directory -> ${FUNCTION_DIR}/app.py
-COPY app/app.py ${FUNCTION_DIR}/app.py
+ARG FUNCTION_DIR
+COPY app/* ${FUNCTION_DIR}
 
 # Set entry point (python module) for Lambda trigger
 CMD ["app.hander"]
